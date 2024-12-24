@@ -6,10 +6,7 @@ export default function ConnectButton() {
   const { open } = useWeb3Modal();
 
   return (
-    <button
-      className="mt-1 text-primary bg-[#F6CD46] rounded-xl py-3 px-6 font-semibold  tracking-wider"
-      onClick={() => open()}
-    >
+    <button className="connect-button" onClick={() => open()}>
       Connect Wallet
     </button>
   );
