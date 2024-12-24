@@ -11,7 +11,7 @@ if (!projectId) throw new Error("Project ID is not defined");
 createWeb3Modal({
   wagmiConfig: config,
   projectId,
-  enableAnalytics: true, // Optional
+  enableAnalytics: false, // Optional
 });
 
 const WagmiProviderComp = ({ children, initialState }) => {
