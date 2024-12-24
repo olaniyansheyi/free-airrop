@@ -7,7 +7,7 @@ export default function ConnectButton() {
 
   return (
     <button
-      className="mt-1 text-primary bg-accent rounded-xl py-3 px-6 font-semibold hover:bg-accent-hover tracking-wider"
+      className="mt-1 text-primary bg-[#F6CD46] rounded-xl py-3 px-6 font-semibold  tracking-wider"
       onClick={() => open()}
     >
       Connect Wallet
