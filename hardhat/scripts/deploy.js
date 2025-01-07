@@ -1,11 +1,13 @@
 const hre = require("hardhat");
 
 async function main() {
+  // Deploy the contract
   const freeAirdrop = await hre.ethers.deployContract("FreeAirdrop");
 
-  await freeAirdrop.waitForDeployment();
+  // Wait for the deployment to complete
+  const tx = await freeAirdrop.waitForDeployment();
 
-  console.log(`deployed to ${freeAirdrop.target}`);
+  console.log(`Contract deployed to: ${freeAirdrop.target}`);
 }
 
 main().catch((error) => {
