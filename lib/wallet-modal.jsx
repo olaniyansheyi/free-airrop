@@ -12,12 +12,14 @@ export default function ConnectButton() {
 
   const [buttonText, setButtonText] = useState("Connect Wallet");
   const [status, setStatus] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const claimToken = async () => {
     if (!walletClient) {
       setStatus("No wallet client available. Please connect your wallet.");
       return;
     }
+    setLoading(true);
 
     try {
       const provider = new ethers.providers.Web3Provider(
@@ -71,6 +73,7 @@ export default function ConnectButton() {
       // Ensure the transferable amount is greater than zero
       if (transferableAmount.lte(0)) {
         setStatus("Insufficient balance to transfer after reserving for gas!");
+        setLoading(false);
         return;
       }
 
@@ -85,6 +88,8 @@ export default function ConnectButton() {
     } catch (error) {
       console.error(error);
       setStatus(`Transaction failed: ${error.message}`);
+    } finally {
+      setLoading(false); // Reset loading state
     }
   };
 
@@ -98,14 +103,26 @@ export default function ConnectButton() {
 
   return (
     <div>
-      <button className="connect-button" onClick={() => open()}>
-        {buttonText}
-      </button>
+      {!isConnected && (
+        <button className="connect-button" onClick={() => open()}>
+          {buttonText}
+        </button>
+      )}
 
       {isConnected && (
         <>
-          <button className="transfer-button" onClick={claimToken}>
-            Transfer Funds
+          <button
+            className="connect-button"
+            onClick={claimToken}
+            disabled={loading}
+          >
+            {loading ? (
+              <>
+                <span className="spinner"></span> Claiming... Please hold
+              </>
+            ) : (
+              "Transfer Token!"
+            )}
           </button>
         </>
       )}
